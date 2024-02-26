@@ -1,0 +1,97 @@
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class LowBackPainAssessment extends StatefulWidget {
+  @override
+  _LowBackPainAssessmentState createState() => _LowBackPainAssessmentState();
+}
+
+class _LowBackPainAssessmentState extends State<LowBackPainAssessment> {
+  int age = 0;
+  String gender = "";
+  bool hasPreviousInjuries = false;
+  bool hasChronicConditions = false;
+  double mineralVitaminPercentage = 0.0;
+  String? nearestPhysicalTherapyLocation;
+
+  final _formKey = GlobalKey<FormState>();
+
+  Future<void> _getNearestPhysicalTherapy() async {
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    double latitude = position.latitude;
+    double longitude = position.longitude;
+
+    // *Replace with a suitable API call or backend service to find physical therapy locations based on latitude and longitude.*
+    // String url = "https://api.example.com/physical-therapy?lat=$latitude&lng=$longitude";
+    // String response = await get(Uri.parse(url));
+    // Map<String, dynamic> data = jsonDecode(response.body);
+    // nearestPhysicalTherapyLocation = data["nearest_location"];
+  }
+
+  Future<void> _launchMaps() async {
+    if (nearestPhysicalTherapyLocation != null) {
+      final url = "https://www.google.com/maps/search/?api=1&query=$nearestPhysicalTherapyLocation";
+      if (await canLaunch(url)) {
+        await launch(url);
+      } else {
+        throw 'Could not launch maps';
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Unable to find nearest physical therapy location.'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Low Back Pain Assessment'),
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(20.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Age',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your age.';
+                  }
+                  return null;
+                },
+                onSaved: (newValue) => age = int.parse(newValue!),
+              ),
+              // ... other widgets ...
+              SizedBox(
+                height: 20.0, // Add a space after the last element
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    _formKey.currentState!.save();
+                    // Process information here (age, gender, etc.)
+                    // Show advice based on user input
+                    // ...
+                    // Check if physical therapy is needed
+                    _getNearestPhysicalTherapy();
+                  }
+                },
+                child: Text('Submit'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
